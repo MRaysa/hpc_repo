@@ -1,0 +1,38 @@
+
+program multiprocessing_example
+    use omp_lib
+    implicit none
+    integer :: i, j, process_number, completed_count
+    integer(8) :: start_time, end_time
+    real(8) :: response_time
+
+    completed_count = 0
+
+    !$omp parallel private(process_number, i, start_time, end_time, response_time) shared(completed_count)
+    process_number = omp_get_thread_num() + 1
+
+    ! Record start time
+    start_time = system_clock()
+    print *, "[Process ", process_number, "] Starting work at ", real(start_time) / 1000.0, " seconds"
+
+    ! Simulate work
+    i = 0
+    do j = 1, 20000000
+        i = i + 1
+    end do
+
+    ! Record end time
+    end_time = system_clock()
+    response_time = real(end_time - start_time) / 1000.0
+    print *, "[Process ", process_number, "] Finished work at ", real(end_time) / 1000.0, " seconds. Response time: ", response_time, " seconds"
+
+    !$omp critical
+    completed_count = completed_count + 1
+    !$omp end critical
+
+    !$omp barrier
+    if (process_number == 1) then
+        print *, "All ", completed_count, " processes completed."
+    end if
+    !$omp end parallel
+end program multiprocessing_example
